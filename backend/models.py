@@ -9,8 +9,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator, BigInteger
 
 from database import Base
+import os
 
-class PrismaDateTime(TypeDecorator):
+_IS_POSTGRES = os.getenv('BACKEND_DATABASE_URL', '').startswith('postgres')
+
+class SQLitePrismaDateTime(TypeDecorator):
     impl = BigInteger
     cache_ok = True
 
@@ -34,6 +37,8 @@ class PrismaDateTime(TypeDecorator):
             except ValueError:
                 pass
         return value
+
+PrismaDateTime = DateTime if _IS_POSTGRES else SQLitePrismaDateTime
 
 
 
