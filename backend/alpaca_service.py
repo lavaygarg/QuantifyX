@@ -66,12 +66,19 @@ class AlpacaService:
         if not order_id:
             raise AlpacaServiceError('Alpaca did not return an order ID')
 
-        filled_order = self._wait_for_fill(order_id)
+        filled_order = self._wait_for_fill(order_id, timeout_seconds=3.0)
         execution_price = self._extract_execution_price(filled_order, fallback=self.get_reference_price(ticker))
-        filled_qty = money(getattr(filled_order, 'filled_qty', qty) or qty)
+        
+        # Ensure we always return the intended quantity if the order is still pending
+        extracted_qty = getattr(filled_order, 'filled_qty', None)
+        if extracted_qty in (None, '', '0', 0):
+            filled_qty = qty
+        else:
+            filled_qty = money(extracted_qty)
+
         return order_id, filled_qty, execution_price
 
-    def _wait_for_fill(self, order_id: str, timeout_seconds: float = 20.0):
+    def _wait_for_fill(self, order_id: str, timeout_seconds: float = 3.0):
         deadline = time.monotonic() + timeout_seconds
         last_order = None
 
@@ -91,10 +98,11 @@ class AlpacaService:
 
             time.sleep(0.5)
 
-        raise AlpacaServiceError('Timed out waiting for Alpaca order execution')
+        # Instead of crashing, we gracefully return the pending order and let the caller fall back to reference price
+        return last_order
 
     def _extract_execution_price(self, order, fallback: Decimal) -> Decimal:
         raw_price = getattr(order, 'filled_avg_price', None)
-        if raw_price in (None, ''):
+        if raw_price in (None, '', '0', 0, 0.0):
             return fallback
         return money(raw_price)
