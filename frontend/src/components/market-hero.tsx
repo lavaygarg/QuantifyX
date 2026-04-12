@@ -33,7 +33,7 @@ export function MarketHero() {
           </div>
           <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
             <div className="text-white">ML-ready stack</div>
-            <div className="mt-1">Forecasts, sentiment, and risk scoring are wired into the UI surface.</div>
+            <div className="mt-1">Forecasts, dynamic candlesticks, and risk scoring are wired into the UI surface.</div>
           </div>
         </div>
       </div>
