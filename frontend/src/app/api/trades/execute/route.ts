@@ -105,7 +105,7 @@ export async function POST(request: Request) {
 
     const newQty = holding.quantity - quantity;
 
-    const txOps = [
+    const txOps: any[] = [
       prisma.transaction.create({
         data: {
           userId: session.userId,
