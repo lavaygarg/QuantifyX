@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 
@@ -39,7 +40,7 @@ class PrismaDateTime(TypeDecorator):
 class User(Base):
     __tablename__ = 'User'
 
-    id: Mapped[str] = mapped_column(String, primary_key=True)
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name: Mapped[str | None] = mapped_column(String, nullable=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     emailVerified: Mapped[datetime | None] = mapped_column(PrismaDateTime, nullable=True)
@@ -55,7 +56,7 @@ class User(Base):
 class Portfolio(Base):
     __tablename__ = 'Portfolio'
 
-    id: Mapped[str] = mapped_column(String, primary_key=True)
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     userId: Mapped[str] = mapped_column(ForeignKey('User.id', ondelete='CASCADE'), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, default='Main Portfolio')
     cashBalance: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False, default=0)
@@ -69,7 +70,7 @@ class Portfolio(Base):
 class Holding(Base):
     __tablename__ = 'Holding'
 
-    id: Mapped[str] = mapped_column(String, primary_key=True)
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     portfolioId: Mapped[str] = mapped_column(ForeignKey('Portfolio.id', ondelete='CASCADE'), nullable=False, index=True)
     symbol: Mapped[str] = mapped_column(String, nullable=False)
     quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False, default=0)
@@ -84,7 +85,7 @@ class Holding(Base):
 class Transaction(Base):
     __tablename__ = 'Transaction'
 
-    id: Mapped[str] = mapped_column(String, primary_key=True)
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     userId: Mapped[str] = mapped_column(ForeignKey('User.id', ondelete='CASCADE'), nullable=False, index=True)
     symbol: Mapped[str] = mapped_column(String, nullable=False)
     side: Mapped[str] = mapped_column(String, nullable=False)
