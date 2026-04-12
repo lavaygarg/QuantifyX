@@ -19,6 +19,9 @@ def normalize_database_url(raw_url: str, base_dir: Path) -> str:
     if raw_url.startswith('sqlite://'):
         return raw_url
 
+    if raw_url.startswith('postgres://'):
+        raw_url = raw_url.replace('postgres://', 'postgresql://', 1)
+
     return raw_url
 
 
