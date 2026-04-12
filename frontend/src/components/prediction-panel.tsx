@@ -235,7 +235,7 @@ export function PredictionPanel() {
                     <th className="px-3 py-2">Date</th>
                     <th className="px-3 py-2">Predicted Price</th>
                     <th className="px-3 py-2">Action</th>
-                    <th className="px-3 py-2">Shares</th>
+                    <th className="px-3 py-2">Shares Held</th>
                     <th className="px-3 py-2">Equity</th>
                   </tr>
                 </thead>
@@ -244,8 +244,12 @@ export function PredictionPanel() {
                     <tr key={row.date} className="border-t border-white/5 text-slate-200">
                       <td className="px-3 py-2">{row.date}</td>
                       <td className="px-3 py-2">{formatMoney(row.predicted_price)}</td>
-                      <td className="px-3 py-2">{row.action}</td>
-                      <td className="px-3 py-2">{row.shares_traded}</td>
+                      <td className="px-3 py-2">
+                        <span className={`font-semibold ${row.action === 'BUY' ? 'text-emerald-400' : row.action === 'SELL' ? 'text-rose-400' : ''}`}>
+                          {row.action} {row.shares_traded > 0 ? `(${row.shares_traded})` : ''}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">{row.shares_held}</td>
                       <td className="px-3 py-2">{formatMoney(row.total_equity)}</td>
                     </tr>
                   ))}
