@@ -50,7 +50,6 @@ class AlpacaService:
 
         if price is None:
             raise AlpacaServiceError(f'Unable to fetch latest market price for {ticker}')
-
         return money(price)
 
     def submit_market_order(self, ticker: str, side: str, qty: Decimal) -> tuple[str, Decimal, Decimal]:
