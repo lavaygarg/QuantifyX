@@ -181,12 +181,9 @@ def _dp_trading_strategy(
 @lru_cache(maxsize=128)
 def get_cached_prediction_model(ticker: str):
     pandas_ta, yfinance, xgboost = _load_ml_dependencies()
-    import requests
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    })
-    stock = yfinance.Ticker(ticker, session=session)
+    
+    # Removed standard requests session, let yfinance use its internal curl_cffi session
+    stock = yfinance.Ticker(ticker)
     historical = stock.history(period="3y", interval="1d")
 
     if historical.empty:
@@ -194,15 +191,6 @@ def get_cached_prediction_model(ticker: str):
 
     engineered = _prepare_features(historical, pandas_ta)
     return _predict_next_15_prices(engineered, xgboost)
-    stock = yfinance.Ticker(ticker)
-    historical = stock.history(period="3y", interval="1d")      
-
-    if historical.empty:
-        raise PredictionServiceError("No historical data returned for ticker")
-
-    engineered = _prepare_features(historical, pandas_ta)
-    return _predict_next_15_prices(engineered, xgboost)
-
 
 def generate_prediction(payload: PredictionRequest) -> dict[str, Any]:
     ticker = payload.ticker.upper().strip()
