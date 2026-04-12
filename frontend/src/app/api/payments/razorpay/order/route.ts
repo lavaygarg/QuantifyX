@@ -53,8 +53,9 @@ export async function POST(request: Request) {
       name: 'Smart Trading Platform',
       description: 'Wallet top-up for simulated trading'
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to create payment order';
+  } catch (error: any) {
+    const sdkError = error?.error?.description || error?.message || String(error);
+    const message = `Payment API Error: ${sdkError}`;
     return Response.json({ error: message }, { status: 500 });
   }
 }
