@@ -11,8 +11,8 @@ h11==0.16.0
 httptools==0.7.1
 idna==3.11
 msgpack==1.1.2
-numpy==2.4.4
-pandas==3.0.2
+numpy
+pandas
 pydantic==2.12.5
 pydantic_core==2.41.5
 pytz==2026.1.post1
@@ -31,6 +31,6 @@ uvicorn==0.44.0
 uvloop==0.22.1
 watchfiles==1.1.1
 websockets==16.0
-pandas-ta==0.4.71b0
+pandas-ta
 xgboost
 yfinance
