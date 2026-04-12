@@ -46,8 +46,8 @@ class User(Base):
     emailVerified: Mapped[datetime | None] = mapped_column(PrismaDateTime, nullable=True)
     passwordHash: Mapped[str | None] = mapped_column(String, nullable=True)
     image: Mapped[str | None] = mapped_column(String, nullable=True)
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, server_default=func.now())
-    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     portfolios = relationship('Portfolio', back_populates='user')
     transactions = relationship('Transaction', back_populates='user')
@@ -60,8 +60,8 @@ class Portfolio(Base):
     userId: Mapped[str] = mapped_column(ForeignKey('User.id', ondelete='CASCADE'), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, default='Main Portfolio')
     cashBalance: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False, default=0)
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, server_default=func.now())
-    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     user = relationship('User', back_populates='portfolios')
     holdings = relationship('Holding', back_populates='portfolio', cascade='all, delete-orphan')
@@ -76,8 +76,8 @@ class Holding(Base):
     quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False, default=0)
     averageCost: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False, default=0)
     currentPrice: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False, default=0)
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, server_default=func.now())
-    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updatedAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     portfolio = relationship('Portfolio', back_populates='holdings')
 
@@ -91,6 +91,6 @@ class Transaction(Base):
     side: Mapped[str] = mapped_column(String, nullable=False)
     quantity: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
-    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, server_default=func.now())
+    createdAt: Mapped[datetime] = mapped_column(PrismaDateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
 
     user = relationship('User', back_populates='transactions')
