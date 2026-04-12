@@ -14,6 +14,7 @@ from .database import Base, SessionLocal, engine
 from .models import Holding, Portfolio, Transaction, User
 from .prediction_service import PredictionRequest as ServicePredictionRequest
 from .prediction_service import PredictionServiceError, generate_prediction
+from .sentiment_service import get_sentiment_score, SentimentServiceError
 from .schemas import PredictionRequest, TradeRequest, TradeResponse
 
 fastapi_module = import_module('fastapi')
@@ -24,7 +25,8 @@ HTTPException = fastapi_module.HTTPException
 CORSMiddleware = cors_module.CORSMiddleware
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-load_dotenv(PROJECT_ROOT / '.env')
+BACKEND_ROOT = Path(__file__).resolve().parent
+load_dotenv(BACKEND_ROOT / '.env')
 
 Base.metadata.create_all(bind=engine)
 
@@ -62,6 +64,20 @@ def predictions(payload: PredictionRequest) -> dict[str, object]:
         raise HTTPException(status_code=400, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=f'Prediction engine failed: {error}') from error
+
+
+@app.get('/api/sentiment/{ticker}')
+def sentiment(ticker: str) -> dict[str, object]:
+    try:
+        score = get_sentiment_score(ticker)
+        return {
+            "stock": ticker.upper(),
+            "sentiment_score": round(score, 4)
+        }
+    except SentimentServiceError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=f'Sentiment engine failed: {error}') from error
 
 
 @app.post('/api/trade', response_model=TradeResponse)

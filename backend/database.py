@@ -7,12 +7,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PRISMA_DIR = PROJECT_ROOT / 'frontend' / 'prisma'
 
 
-def normalize_database_url(raw_url: str) -> str:
+def normalize_database_url(raw_url: str, base_dir: Path) -> str:
     if raw_url.startswith('file:'):
         relative_path = raw_url.removeprefix('file:')
-        database_path = (PROJECT_ROOT / relative_path).resolve()
+        database_path = (base_dir / relative_path).resolve()
         return f'sqlite:///{database_path}'
 
     if raw_url.startswith('sqlite://'):
@@ -21,7 +22,13 @@ def normalize_database_url(raw_url: str) -> str:
     return raw_url
 
 
-DATABASE_URL = normalize_database_url(os.getenv('DATABASE_URL', 'file:./dev.db'))
+raw_backend_database_url = os.getenv('BACKEND_DATABASE_URL')
+if raw_backend_database_url:
+    DATABASE_URL = normalize_database_url(raw_backend_database_url, PROJECT_ROOT)
+else:
+    # Prisma resolves file: paths relative to schema.prisma (./prisma directory).
+    DATABASE_URL = normalize_database_url(os.getenv('DATABASE_URL', 'file:./dev.db'), PRISMA_DIR)
+
 connect_args = {'check_same_thread': False} if DATABASE_URL.startswith('sqlite') else {}
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args, future=True)
