@@ -1,18 +1,24 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import DateTime, ForeignKey, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import TypeDecorator
-from datetime import timezone
+from sqlalchemy.types import TypeDecorator, BigInteger
 
 from database import Base
 
 class PrismaDateTime(TypeDecorator):
-    impl = DateTime
+    impl = BigInteger
     cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return int(value.timestamp() * 1000)
+        return value
 
     def process_result_value(self, value, dialect):
         if value is None:
