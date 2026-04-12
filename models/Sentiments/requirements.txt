@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+finnhub-python
+vaderSentiment
