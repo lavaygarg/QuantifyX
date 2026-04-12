@@ -74,7 +74,7 @@ export default function LoginPage() {
   return (
     <main className="login-background mx-auto flex min-h-screen max-w-md items-center px-4">
       <section className="w-full rounded-[1.75rem] border border-white/8 bg-slate-950/60 p-8 shadow-sm shadow-black/10 backdrop-blur-sm">
-        <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Smart Trading Platform</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Tradify</p>
         <h1 className="mt-3 text-3xl font-semibold text-white">
           {isRegister ? 'Create account' : 'Sign in to trade'}
         </h1>

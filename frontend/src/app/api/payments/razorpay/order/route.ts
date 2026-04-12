@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       amount: parsed.data.amount,
       currency: order.currency,
       keyId: process.env.RAZORPAY_KEY_ID,
-      name: 'Smart Trading Platform',
+      name: 'Tradify',
       description: 'Wallet top-up for simulated trading'
     });
   } catch (error: any) {

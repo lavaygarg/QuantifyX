@@ -1,4 +1,4 @@
-# Smart Trading Platform
+# Tradify
 
 A Next.js + TypeScript trading simulator for Problem Statement 1.
 

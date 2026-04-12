@@ -82,7 +82,7 @@ export default async function HomePage() {
       <section className="rounded-[1.75rem] border border-white/20 bg-white/10 px-6 py-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] backdrop-blur-2xl md:px-8 md:py-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Smart Trading Platform</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Tradify</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white md:text-5xl">
               Welcome back, {session.user.name ?? 'Trader'}.
             </h1>
