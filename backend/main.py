@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 import os
+import sys
+
+# Forcefully bypass proxy to resolve yfinance NoneType extraction errors natively
+for key in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY']:
+    os.environ.pop(key, None)
 from decimal import Decimal
 from importlib import import_module
 from pathlib import Path

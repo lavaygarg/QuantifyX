@@ -61,6 +61,12 @@ export function AddFundsButton({ userName, userEmail }: Props) {
         return;
       }
 
+      if (!orderData.keyId) {
+        setMessage('Keys missing. Please cleanly restart your terminal/Next.js server so it reads the .env file!');
+        setLoading(false);
+        return;
+      }
+
       const razorpay = new window.Razorpay({
         key: orderData.keyId,
         amount: orderData.amount * 100,
