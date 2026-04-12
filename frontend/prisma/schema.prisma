@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("postgresql://quantifyx_user:IOIb2uwCgZS9AceaSRne8snLv6yUwew8@dpg-d7dqgpv41pts73a7fnmg-a/quantifyx")
+  url      = env("DATABASE_URL")
 }
 
 model User {
