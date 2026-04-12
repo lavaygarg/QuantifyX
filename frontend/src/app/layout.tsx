@@ -3,7 +3,7 @@ import { SessionProvider } from '@/components/session-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Tradify',
+  title: 'QuantifyX',
   description: 'Simulated trading, portfolio insights, and ML-ready market intelligence.'
 };
 

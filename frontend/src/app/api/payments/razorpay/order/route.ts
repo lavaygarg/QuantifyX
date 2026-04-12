@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       amount: parsed.data.amount,
       currency: order.currency,
       keyId: process.env.RAZORPAY_KEY_ID,
-      name: 'Tradify',
+      name: 'QuantifyX',
       description: 'Wallet top-up for simulated trading'
     });
   } catch (error: any) {

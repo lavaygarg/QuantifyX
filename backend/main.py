@@ -39,7 +39,7 @@ load_dotenv(BACKEND_ROOT / '.env')
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title='Tradify Alpaca Engine', version='1.0.0')
+app = FastAPI(title='QuantifyX Alpaca Engine', version='1.0.0')
 
 app.add_middleware(
     CORSMiddleware,

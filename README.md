@@ -1,4 +1,4 @@
-# Tradify
+# QuantifyX
 
 A Next.js + TypeScript trading simulator for Problem Statement 1.
 

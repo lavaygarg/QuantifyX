@@ -6,7 +6,7 @@ BLUE='\03{"033"}3[0;34m'
 NC='\03{"033"}3[0m' # No Color
 
 echo -e "${GREEN}===============================================${NC}"
-echo -e "${GREEN}   Starting Tradify (Local)                    ${NC}"
+echo -e "${GREEN}   Starting QuantifyX (Local)                  ${NC}"
 echo -e "${GREEN}===============================================${NC}"
 
 echo -e "${BLUE}[1/2] Starting Python FastAPI Backend...${NC}"

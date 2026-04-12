@@ -8,7 +8,7 @@ export function MarketHero() {
     <section className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-8 shadow-2xl shadow-black/20 backdrop-blur">
       <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
         <div className="max-w-3xl">
-          <p className="text-sm uppercase tracking-[0.3em] text-blue-300">Tradify</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-blue-300">QuantifyX</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight md:text-6xl">
             Simulated trading with live-style analytics and ML predictions.
           </h1>
