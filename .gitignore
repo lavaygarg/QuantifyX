@@ -3,7 +3,7 @@
 venv
 env
 bin/
-lib/
+# lib/
 include/
 
 # Node
