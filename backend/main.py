@@ -4,10 +4,15 @@ import os
 from decimal import Decimal
 from importlib import import_module
 from pathlib import Path
+from functools import lru_cache
 
 from dotenv import load_dotenv
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+# Dynamically add the backend directory to sys.path so imports work flawlessly 
+# whether launched from Render (inside /backend) or locally (from project root)!
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from alpaca_service import AlpacaService, AlpacaServiceError, money
 from database import Base, SessionLocal, engine
@@ -64,33 +69,35 @@ def predictions(payload: PredictionRequest) -> dict[str, object]:
     except Exception as error:
         raise HTTPException(status_code=500, detail=f'Prediction engine failed: {error}') from error
 
+@lru_cache(maxsize=128)
+def fetch_ohlc_cached(ticker: str):
+    import yfinance as yf
+    stock = yf.Ticker(ticker)
+    df = stock.history(period="6mo", interval="1d")
+    if df.empty:
+        return []
+    
+    df = df.reset_index()
+    if df['Date'].dt.tz is not None:
+        df['Date'] = df['Date'].dt.tz_localize(None)
+
+    bars = []
+    for _, row in df.iterrows():
+        bars.append({
+            "x": row['Date'].strftime('%Y-%m-%d'),
+            "y": [
+                round(row['Open'], 2),
+                round(row['High'], 2),
+                round(row['Low'], 2),
+                round(row['Close'], 2)
+            ]
+        })
+    return bars
+
 @app.get('/api/prices/{ticker}/ohlc')
 def get_ohlc(ticker: str):
-    import yfinance as yf
     try:
-        stock = yf.Ticker(ticker)
-        # Fetching last 6 months of daily OHLC data
-        df = stock.history(period="6mo", interval="1d")
-        if df.empty:
-            return []
-        
-        df = df.reset_index()
-        # Ensure timezone-naive dates for frontend parsing
-        if df['Date'].dt.tz is not None:
-            df['Date'] = df['Date'].dt.tz_localize(None)
-
-        bars = []
-        for _, row in df.iterrows():
-            bars.append({
-                "x": row['Date'].strftime('%Y-%m-%d'),
-                "y": [
-                    round(row['Open'], 2),
-                    round(row['High'], 2),
-                    round(row['Low'], 2),
-                    round(row['Close'], 2)
-                ]
-            })
-        return bars
+        return fetch_ohlc_cached(ticker)
     except Exception as error:
         raise HTTPException(status_code=500, detail=f'Failed to fetch OHLC data: {error}') from error
 

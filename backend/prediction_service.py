@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from importlib import import_module
 from typing import Any
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -177,16 +178,9 @@ def _dp_trading_strategy(
     return pd.DataFrame(trade_log)
 
 
-def generate_prediction(payload: PredictionRequest) -> dict[str, Any]:
+@lru_cache(maxsize=128)
+def get_cached_prediction_model(ticker: str):
     pandas_ta, yfinance, xgboost = _load_ml_dependencies()
-
-    ticker = payload.ticker.upper().strip()
-    if ticker not in SUPPORTED_TICKERS:
-        raise PredictionServiceError(f"Unsupported ticker: {ticker}")
-
-    if payload.budget < 100:
-        raise PredictionServiceError("Budget must be at least 100")
-
     stock = yfinance.Ticker(ticker)
     historical = stock.history(period="3y", interval="1d")
 
@@ -194,7 +188,18 @@ def generate_prediction(payload: PredictionRequest) -> dict[str, Any]:
         raise PredictionServiceError("No historical data returned for ticker")
 
     engineered = _prepare_features(historical, pandas_ta)
-    prediction_df, context_df = _predict_next_15_prices(engineered, xgboost)
+    return _predict_next_15_prices(engineered, xgboost)
+
+
+def generate_prediction(payload: PredictionRequest) -> dict[str, Any]:
+    ticker = payload.ticker.upper().strip()
+    if ticker not in SUPPORTED_TICKERS:
+        raise PredictionServiceError(f"Unsupported ticker: {ticker}")
+
+    if payload.budget < 100:
+        raise PredictionServiceError("Budget must be at least 100")
+
+    prediction_df, context_df = get_cached_prediction_model(ticker)
 
     trade_df = _dp_trading_strategy(
         prices=prediction_df["predicted_price"].to_numpy(dtype=float),
