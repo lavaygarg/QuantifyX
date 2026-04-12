@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 
 const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -32,7 +32,7 @@ export function CandlestickChart({ ticker }: CandlestickProps) {
     fetchData();
   }, [ticker]);
 
-  const options = {
+  const options = useMemo(() => ({
     chart: {
       type: 'candlestick' as const,
       background: 'transparent',
@@ -49,9 +49,12 @@ export function CandlestickChart({ ticker }: CandlestickProps) {
     plotOptions: {
       candlestick: {
         colors: {
-          upward: '#34d399', // Emerald
-          downward: '#fb7185', // Rose
+          upward: '#10b981', // Emerald
+          downward: '#f43f5e', // Rose
         },
+        wick: {
+          useFillColor: true,
+        }
       },
     },
     xaxis: {
@@ -86,7 +89,7 @@ export function CandlestickChart({ ticker }: CandlestickProps) {
     tooltip: {
       theme: 'dark',
     },
-  };
+  }), []);
 
   const series = [
     {

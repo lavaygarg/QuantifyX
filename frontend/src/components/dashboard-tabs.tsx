@@ -1,19 +1,20 @@
 "use client";
 
 import { useState } from 'react';
-import { BarChart3, BrainCircuit, CandlestickChart, History, ListChecks } from 'lucide-react';
+import { BarChart3, BrainCircuit, CandlestickChart as CandlestickChartIcon, History, ListChecks } from 'lucide-react';
 import { HoldingsTable } from '@/components/holdings-table';
 import { PortfolioChart } from '@/components/portfolio-chart';
 import { PredictionPanel } from '@/components/prediction-panel';
 import { TradeTicket } from '@/components/trade-ticket';
 import { TransactionsPanel } from '@/components/transactions-panel';
 import { WatchlistPanel } from '@/components/watchlist-panel';
+import { CandlestickChart } from '@/components/candlestick-chart';
 import type { Holding, Transaction, WatchlistItem } from '@/lib/types';
 
 type DashboardTab = 'trading' | 'holdings' | 'watchlist' | 'transactions' | 'ml';
 
 const tabs: Array<{ key: DashboardTab; label: string; description: string; icon: React.ReactNode }> = [
-  { key: 'trading', label: 'Trading', description: 'Chart + trade ticket', icon: <CandlestickChart className="h-4 w-4" /> },
+  { key: 'trading', label: 'Trading', description: 'Chart + trade ticket', icon: <CandlestickChartIcon className="h-4 w-4" /> },
   { key: 'holdings', label: 'Holdings', description: 'Positions and P&L', icon: <BarChart3 className="h-4 w-4" /> },
   { key: 'watchlist', label: 'Watchlist', description: 'Tracked symbols', icon: <ListChecks className="h-4 w-4" /> },
   { key: 'transactions', label: 'Recent Transactions', description: 'Trade history', icon: <History className="h-4 w-4" /> },
@@ -71,7 +72,10 @@ export function DashboardTabs({
       <div className="p-4 md:p-6">
         {activeTab === 'trading' && (
           <div className="grid gap-5 xl:grid-cols-[1.4fr_0.9fr]">
-            <PortfolioChart />
+            <div className="flex flex-col gap-5">
+              <PortfolioChart />
+              <CandlestickChart ticker="AAPL" />
+            </div>
             <TradeTicket />
           </div>
         )}

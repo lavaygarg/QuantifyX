@@ -65,6 +65,36 @@ def predictions(payload: PredictionRequest) -> dict[str, object]:
     except Exception as error:
         raise HTTPException(status_code=500, detail=f'Prediction engine failed: {error}') from error
 
+@app.get('/api/prices/{ticker}/ohlc')
+def get_ohlc(ticker: str):
+    import yfinance as yf
+    try:
+        stock = yf.Ticker(ticker)
+        # Fetching last 6 months of daily OHLC data
+        df = stock.history(period="6mo", interval="1d")
+        if df.empty:
+            return []
+        
+        df = df.reset_index()
+        # Ensure timezone-naive dates for frontend parsing
+        if df['Date'].dt.tz is not None:
+            df['Date'] = df['Date'].dt.tz_localize(None)
+
+        bars = []
+        for _, row in df.iterrows():
+            bars.append({
+                "x": row['Date'].strftime('%Y-%m-%d'),
+                "y": [
+                    round(row['Open'], 2),
+                    round(row['High'], 2),
+                    round(row['Low'], 2),
+                    round(row['Close'], 2)
+                ]
+            })
+        return bars
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=f'Failed to fetch OHLC data: {error}') from error
+
 
 @app.get('/api/sentiment/{ticker}')
 def sentiment(ticker: str) -> dict[str, object]:
