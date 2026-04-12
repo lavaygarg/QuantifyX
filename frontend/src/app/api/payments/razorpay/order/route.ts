@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     const order = await client.orders.create({
       amount: parsed.data.amount * 100,
       currency: 'INR',
-      receipt: `topup_${session.userId}_${Date.now()}`,
+      receipt: `rcpt_${session.userId.substring(0, 8)}_${Date.now()}`,
       notes: {
         userId: session.userId,
         email: session.email ?? ''
