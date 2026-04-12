@@ -31,6 +31,6 @@ uvicorn==0.44.0
 uvloop==0.22.1
 watchfiles==1.1.1
 websockets==16.0
-pandas-ta==0.3.14b0
-xgboost==2.0.3
-yfinance==0.2.37
+pandas-ta==0.4.71b0
+xgboost
+yfinance
