@@ -9,12 +9,12 @@ from dotenv import load_dotenv
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .alpaca_service import AlpacaService, AlpacaServiceError, money
-from .database import Base, SessionLocal, engine
-from .models import Holding, Portfolio, Transaction, User
-from .prediction_service import PredictionRequest as ServicePredictionRequest
-from .prediction_service import PredictionServiceError, generate_prediction
-from .schemas import PredictionRequest, TradeRequest, TradeResponse
+from alpaca_service import AlpacaService, AlpacaServiceError, money
+from database import Base, SessionLocal, engine
+from models import Holding, Portfolio, Transaction, User
+from prediction_service import PredictionRequest as ServicePredictionRequest
+from prediction_service import PredictionServiceError, generate_prediction
+from schemas import PredictionRequest, TradeRequest, TradeResponse
 
 fastapi_module = import_module('fastapi')
 cors_module = import_module('fastapi.middleware.cors')
