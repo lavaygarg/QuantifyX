@@ -250,6 +250,14 @@ def generate_prediction(payload: PredictionRequest) -> dict[str, Any]:
 
     expected_profit_15d = round(float(expected_profit_series[-1]["profit"]), 2)
 
+    strategy_recommendation = "Hold and monitor. The model expects minimal volatility in the immediate term."
+    if expected_profit_15d > start_equity * 0.05:
+        strategy_recommendation = "Strong uptrend expected. Allocate capital aggressively at the next valid entry signal to maximize momentum returns."
+    elif expected_profit_15d < 0:
+        strategy_recommendation = "Downtrend projected. Suspend new long positions. Liquidate existing assets rapidly to preserve cash balance."
+    elif expected_profit_15d > 0:
+        strategy_recommendation = "Moderate profitability. Execute selective swing-trades. Strictly adhere to cooldown periods to avoid losing profits to exchange fees."
+
     return {
         "ticker": ticker,
         "budget": round(float(payload.budget), 2),
@@ -262,6 +270,7 @@ def generate_prediction(payload: PredictionRequest) -> dict[str, Any]:
         "summary": {
             "starting_budget": round(start_equity, 2),
             "final_equity": round(final_equity, 2),
-            "net_pnl_percent": round((overall_profit / start_equity) * 100, 2)
+            "net_pnl_percent": round((overall_profit / start_equity) * 100, 2),
+            "strategy": strategy_recommendation
         }
     }

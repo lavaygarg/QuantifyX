@@ -42,6 +42,7 @@ type PredictionApiResponse = {
     starting_budget: number;
     final_equity: number;
     net_pnl_percent: number;
+    strategy: string;
   };
 };
 
@@ -169,6 +170,16 @@ export function PredictionPanel() {
                 {result.summary.net_pnl_percent >= 0 ? '+' : ''}{result.summary.net_pnl_percent}%
               </p>
             </div>
+          </div>
+
+          <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-5 shadow-[inset_0_0_20px_rgba(139,92,246,0.05)]">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🤖</span>
+              <h3 className="font-semibold text-violet-200">AI Strategy Recommendation</h3>
+            </div>
+            <p className="mt-2 text-[15px] leading-relaxed text-violet-100/80">
+              {result.summary.strategy}
+            </p>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
