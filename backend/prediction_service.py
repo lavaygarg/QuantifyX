@@ -195,7 +195,7 @@ def get_cached_prediction_model(ticker: str):
     engineered = _prepare_features(historical, pandas_ta)
     return _predict_next_15_prices(engineered, xgboost)
     stock = yfinance.Ticker(ticker)
-    historical = stock.history(period="3y", interval="1d")
+    historical = stock.history(period="3y", interval="1d")      
 
     if historical.empty:
         raise PredictionServiceError("No historical data returned for ticker")

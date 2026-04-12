@@ -34,5 +34,5 @@ websockets==16.0
 pandas-ta
 pandas-ta
 xgboost
-yfinance
+yfinance>=0.2.37
 psycopg2-binary
