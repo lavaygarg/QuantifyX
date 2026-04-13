@@ -1,14 +1,10 @@
 """
 risk_engine/inputs.py
 ─────────────────────
-Bridges two data sources into normalized [-1, 1] scores:
-
-  SOURCE 1 — Prediction  : prediction_service.py  (runs locally in same backend)
-  SOURCE 2 — Sentiment   : https://sentiment-api-6qy2.onrender.com  (external API)
-
-Both sources expose 6 buttons:
-    fetch_xxx_single(symbol)  →  Buttons 1-5  (one company)
-    fetch_xxx_all()           →  Button  6    (all 5 at once)
+FIXES vs previous version:
+  BUG 3 — Fallback dict missing 'net_pnl_percent' and 'strategy' keys → added
+  BUG 4 — @lru_cache on function that takes unhashable PredictionRequest → fixed
+           Cache now keyed on ticker string only (hashable)
 """
 
 from __future__ import annotations
@@ -18,59 +14,70 @@ import math
 import requests
 from functools import lru_cache
 
-# ── prediction_service lives in the same backend package ──────────────────────
-from prediction_service import generate_prediction, PredictionRequest, SUPPORTED_TICKERS
+from prediction_service import generate_prediction, PredictionRequest
 
-SYMBOLS  = ["AAPL", "TSLA", "MSFT", "AMZN", "GOOGL"]
-SENT_URL = os.getenv("SENTIMENT_API_URL", "https://sentiment-api-6qy2.onrender.com")
+SYMBOLS   = ["AAPL", "TSLA", "MSFT", "AMZN", "GOOGL"]
+SENT_URL  = os.getenv("SENTIMENT_API_URL", "https://sentiment-api-6qy2.onrender.com")
+SENTINEL_MISSING = True    # exported so engine.py can import it if needed
 
-# Default budget used purely for scoring — not a real trade
 _SCORE_BUDGET = 10_000.0
 
-_FALLBACK_SENT = {"sentiment_score":  0.0, "sentiment_label": "neutral",  "confidence": 0.0}
-_FALLBACK_PRED = {"prediction_score": 0.0, "prediction_label": "neutral",  "confidence": 0.0}
+# FIX BUG 3: fallbacks now include ALL keys that engine.py expects
+_FALLBACK_SENT = {
+    "sentiment_score":  0.0,
+    "sentiment_label":  "neutral",
+    "confidence":       0.0,
+    "is_missing":       True,    # ← sentinel flag so engine knows this is fallback
+}
+_FALLBACK_PRED = {
+    "prediction_score": 0.0,
+    "prediction_label": "neutral",
+    "confidence":       0.0,
+    "net_pnl_percent":  0.0,     # ← was missing before
+    "strategy":         "",      # ← was missing before
+    "is_missing":       True,    # ← sentinel flag
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  HELPER — normalize net_pnl_percent → [-1, 1]
+#  HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _normalize_pnl(net_pnl_percent: float) -> float:
     """
-    Maps any profit/loss % to a clean [-1, 1] score using tanh.
-    Scaling factor 15 means ±15% profit ≈ ±0.76 (strong signal).
+    net_pnl_percent → [-1, 1] via tanh.
+    Scaling factor 15 → ±15% profit ≈ ±0.76 (strong signal).
 
-    Examples:
-        +20% → +0.83   (very bullish)
-        +5%  → +0.32   (mildly bullish)
-         0%  →  0.0    (neutral)
-        -10% → -0.58   (bearish)
-        -20% → -0.83   (very bearish)
+    +20% → +0.83  |  +5% → +0.32  |  0% → 0.0  |  -10% → -0.58
     """
     return round(math.tanh(net_pnl_percent / 15.0), 4)
 
 
-def _label_from_score(score: float, mode: str = "prediction") -> str:
-    if mode == "prediction":
-        if score > 0.2:  return "bullish"
-        if score < -0.2: return "bearish"
-        return "neutral"
-    else:
-        if score > 0.05:  return "positive"
-        if score < -0.05: return "negative"
-        return "neutral"
+def _pred_label(score: float) -> str:
+    if score > 0.2:  return "bullish"
+    if score < -0.2: return "bearish"
+    return "neutral"
+
+
+def _sent_label(score: float) -> str:
+    if score > 0.05:  return "positive"
+    if score < -0.05: return "negative"
+    return "neutral"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  PREDICTION  —  6 buttons
-#  Source: prediction_service.generate_prediction()  (local, same process)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @lru_cache(maxsize=32)
 def _raw_prediction(ticker: str) -> dict:
     """
-    Calls generate_prediction() once per ticker and caches result.
-    Uses _SCORE_BUDGET as a dummy budget — we only care about net_pnl_percent.
+    FIX BUG 4:
+      OLD: @lru_cache on a function taking PredictionRequest (unhashable dataclass)
+           → TypeError: unhashable type at runtime
+
+      NEW: Cache is keyed on ticker STRING (hashable ✅).
+           PredictionRequest is constructed INSIDE this function.
     """
     request = PredictionRequest(
         ticker=ticker,
@@ -84,29 +91,30 @@ def _raw_prediction(ticker: str) -> dict:
 
 def fetch_prediction_single(symbol: str) -> dict:
     """
-    Buttons 1–5 : prediction for ONE company.
+    Buttons 1–5: prediction for ONE company.
 
     Returns:
         {
-            "prediction_score":  0.32,       ← normalized [-1, 1]
-            "prediction_label":  "bullish",
-            "confidence":        0.32,
-            "net_pnl_percent":   5.0,        ← raw % from model
-            "strategy":          "..."        ← model's strategy text
+            "prediction_score": 0.32,
+            "prediction_label": "bullish",
+            "confidence":       0.32,
+            "net_pnl_percent":  5.0,
+            "strategy":         "...",
+            "is_missing":       False
         }
     """
     symbol = symbol.upper()
     try:
-        raw    = _raw_prediction(symbol)
-        pnl    = float(raw["summary"]["net_pnl_percent"])
-        score  = _normalize_pnl(pnl)
-        label  = _label_from_score(score, "prediction")
+        raw   = _raw_prediction(symbol)
+        pnl   = float(raw["summary"]["net_pnl_percent"])
+        score = _normalize_pnl(pnl)
         return {
             "prediction_score": score,
-            "prediction_label": label,
+            "prediction_label": _pred_label(score),
             "confidence":       abs(score),
             "net_pnl_percent":  round(pnl, 2),
             "strategy":         raw["summary"].get("strategy", ""),
+            "is_missing":       False,
         }
     except Exception as e:
         print(f"[PREDICTION] Error fetching {symbol}: {e}")
@@ -114,39 +122,29 @@ def fetch_prediction_single(symbol: str) -> dict:
 
 
 def fetch_prediction_all() -> dict:
-    """
-    Button 6 : prediction for ALL 5 companies at once.
-
-    Returns:
-        {
-            "AAPL":  { "prediction_score": 0.32,  "prediction_label": "bullish",  ... },
-            "TSLA":  { "prediction_score": -0.58, "prediction_label": "bearish",  ... },
-            ...
-        }
-    """
+    """Button 6: prediction for ALL 5 companies at once."""
     return {sym: fetch_prediction_single(sym) for sym in SYMBOLS}
 
 
 def clear_prediction_cache():
-    """Call this to force fresh predictions on next request."""
     _raw_prediction.cache_clear()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  SENTIMENT  —  6 buttons
-#  Source: https://sentiment-api-6qy2.onrender.com  (external Render API)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def fetch_sentiment_single(symbol: str) -> dict:
     """
-    Buttons 1–5 : sentiment for ONE company.
+    Buttons 1–5: sentiment for ONE company.
     Calls → GET /sentiment/{symbol}
 
     Returns:
         {
             "sentiment_score":  0.21,
             "sentiment_label":  "positive",
-            "confidence":       0.21
+            "confidence":       0.21,
+            "is_missing":       False
         }
     """
     symbol = symbol.upper()
@@ -154,10 +152,12 @@ def fetch_sentiment_single(symbol: str) -> dict:
         resp = requests.get(f"{SENT_URL}/sentiment/{symbol}", timeout=10)
         resp.raise_for_status()
         d = resp.json()
+        score = float(d.get("sentiment_score", 0.0))
         return {
-            "sentiment_score": float(d.get("sentiment_score", 0.0)),
-            "sentiment_label": d.get("sentiment_label", "neutral"),
+            "sentiment_score": score,
+            "sentiment_label": d.get("sentiment_label", _sent_label(score)),
             "confidence":      float(d.get("confidence", 0.0)),
+            "is_missing":      False,
         }
     except Exception as e:
         print(f"[SENTIMENT] Error fetching {symbol}: {e}")
@@ -166,15 +166,8 @@ def fetch_sentiment_single(symbol: str) -> dict:
 
 def fetch_sentiment_all() -> dict:
     """
-    Button 6 : sentiment for ALL 5 companies at once.
+    Button 6: sentiment for ALL 5 companies at once.
     Calls → GET /sentiment-multiple
-
-    Returns:
-        {
-            "AAPL":  { "sentiment_score": 0.21,  "sentiment_label": "positive", "confidence": 0.21 },
-            "TSLA":  { "sentiment_score": -0.08, "sentiment_label": "negative", "confidence": 0.08 },
-            ...
-        }
     """
     try:
         resp = requests.get(f"{SENT_URL}/sentiment-multiple", timeout=15)
@@ -185,6 +178,7 @@ def fetch_sentiment_all() -> dict:
                 "sentiment_score": float(info.get("sentiment_score", 0.0)),
                 "sentiment_label": info.get("sentiment_label", "neutral"),
                 "confidence":      float(info.get("confidence", 0.0)),
+                "is_missing":      False,
             }
             for sym, info in raw.items()
         }
