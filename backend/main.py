@@ -10,6 +10,7 @@ from decimal import Decimal
 from importlib import import_module
 from pathlib import Path
 from functools import lru_cache
+from time import sleep
 
 from dotenv import load_dotenv
 from sqlalchemy import select
@@ -48,12 +49,25 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title='QuantifyX Alpaca Engine', version='1.0.0')
 
+
+def _build_allowed_origins() -> list[str]:
+    default_origins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://quantifyx.onrender.com',
+    ]
+    extra_origins_raw = os.getenv('CORS_ALLOW_ORIGINS', '').strip()
+    extra_origins = [origin.strip() for origin in extra_origins_raw.split(',') if origin.strip()]
+
+    merged: list[str] = []
+    for origin in [*default_origins, *extra_origins]:
+        if origin not in merged:
+            merged.append(origin)
+    return merged
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        'http://localhost:3000',
-        'http://127.0.0.1:3000'
-    ],
+    allow_origins=_build_allowed_origins(),
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*']
@@ -85,7 +99,21 @@ def predictions(payload: PredictionRequest) -> dict[str, object]:
 def fetch_ohlc_cached(ticker: str):
     import yfinance as yf
     stock = yf.Ticker(ticker)
-    df = stock.history(period="6mo", interval="1d")
+    df = None
+    last_error: Exception | None = None
+
+    for attempt in range(3):
+        try:
+            df = stock.history(period="6mo", interval="1d")
+            break
+        except Exception as error:
+            last_error = error
+            if attempt < 2:
+                sleep(0.6)
+
+    if df is None:
+        raise RuntimeError(f'Unable to fetch OHLC for {ticker}: {last_error}')
+
     if df.empty:
         return []
     
@@ -106,7 +134,7 @@ def fetch_ohlc_cached(ticker: str):
         })
     return bars
 
-@app.get('/api/prices/{ticker}/ohlc')
+@app.get('/api/prices/{ticker:path}/ohlc')
 def get_ohlc(ticker: str):
     try:
         return fetch_ohlc_cached(ticker)

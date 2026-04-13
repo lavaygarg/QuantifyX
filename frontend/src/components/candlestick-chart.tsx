@@ -18,8 +18,9 @@ export function CandlestickChart({ ticker }: CandlestickProps) {
       try {
         setIsLoading(true);
         // Add NEXT_PUBLIC_API_URL prefix in case of separated frontend/backend config
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${apiUrl}/api/prices/${ticker}/ohlc`);
+        const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
+        const encodedTicker = encodeURIComponent(ticker);
+        const res = await fetch(`${apiUrl}/api/prices/${encodedTicker}/ohlc`);
         if (!res.ok) return;
         const ohlc = await res.json();
         setData(ohlc);
