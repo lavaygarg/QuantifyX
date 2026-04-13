@@ -1,27 +1,33 @@
-# QuantifyX – Smart Trading & Portfolio Platform
+# QuantifyX — Smart Trading Platform
 
-A high-performance comprehensive Next.js + TypeScript trading simulator built for **Problem Statement 1**. It features simulated trading, real-time portfolio dashboards, Alpaca paper trading integration, and advanced ML-based price trend prediction and sentiment analysis.
+QuantifyX is a full-stack trading and portfolio platform that combines a modern Next.js dashboard, a FastAPI trading engine, ML-based forecasting, and risk/sentiment intelligence into one production-ready workflow.
+
+## 🌐 Live Deployment
+
+- Frontend: https://quantifyx.onrender.com
+- Backend: https://quantifyx-backend.onrender.com
 
 ---
 
 ## 🚀 Key Features
 
 ### 🖥️ Next.js Fullstack Dashboard
-- **Real-Time Portfolio:** Interactive holdings, watchlist, and transaction panels utilizing Recharts & ApexCharts for premium visualization.
-- **Authentication:** Secure credential-based login powered by NextAuth.js.
-- **Wallet Integration:** Razorpay integration for simulated wallet top-ups.
-- **Robust Database:** Prisma ORM for type-safe database schemas (supporting SQLite for local and PostgreSQL for production).
-- **Modern UI:** Tailwind CSS and Lucide React delivering a glassmorphism aesthetic and responsive design.
+- **Interactive Workspace Tabs:** Trading, Holdings, Watchlist, Transactions, ML Prediction, and Risk & Sentiment.
+- **Candlestick + Portfolio Charts:** ApexCharts and Recharts powered visual analytics.
+- **Authentication:** Credential login with NextAuth + Prisma adapter.
+- **Wallet Flow:** Razorpay order + signature verification API routes.
+- **Modern UI:** Tailwind CSS + Lucide icons with responsive dashboard patterns.
 
 ### ⚙️ FastAPI Trading Engine
-- **Trade Execution:** Integration with the Alpaca API for seamless paper trading and real-time market data.
-- **Local Ledger:** Synchronizes Alpine order fills into a fast SQLite-backed ledger system.
-- **Market Data:** Fetches real-time price boundaries and historical OHLC data natively via `yfinance`.
+- **Trade Execution:** Alpaca paper-trade order flow with validation and ledger updates.
+- **Market Data:** Historical OHLC candles from `yfinance` for charting.
+- **Resilience Upgrades:** Retry handling for transient OHLC provider failures.
+- **Cross-Origin Ready:** Production CORS allowlisting for deployed frontend.
 
 ### 🧠 Applied ML & AI Risk Engine
-- **15-Day Price Forecasting:** An **XGBoost Regressor** trained on engineered technical indicators (RSI, MACD, Bollinger Bands via `pandas-ta`) accurately predicts future closing prices.
-- **Algorithmic DP Strategy:** A Dynamic Programming trading simulation executes on top of the forecasted prices to optimize optimal entry (BUY/SELL) actions under constraints (budget, max transactions, cooldown periods).
-- **Sentiment & Risk Engine:** A modular service (`risk_engine`) calculating holistic `risk_score`, `signal_score`, and `final_strength` based on algorithmic trade profit projection and live News Sentiment endpoints. Yields clear buy/hold/sell recommendations and capital allocation percentages.
+- **15-Day Forecasting:** XGBoost model trained on engineered features (RSI, MACD, Bollinger Bands, lag/rolling signals).
+- **Strategy Simulation:** Rule-based trading strategy to generate actionable 15-day decisions.
+- **Risk + Sentiment Fusion:** Produces `risk_score`, `signal_score`, `final_strength`, recommendation label, and strategy text.
   - **Deployed Sentiment Model API:** [https://sentiment-api-6qy2.onrender.com/sentiment-multiple](https://sentiment-api-6qy2.onrender.com/sentiment-multiple)
 ---
 
@@ -40,19 +46,34 @@ A high-performance comprehensive Next.js + TypeScript trading simulator built fo
 
 ```text
 smart-trading-platform/
+├── README.md
+├── run_local.sh
 ├── frontend/
-│   ├── src/                  # Next.js App Router pages and UI components
-│   ├── prisma/               # Database schema and seed scripts
-│   └── package.json          # Node dependencies
+│   ├── src/                    # Next.js App Router pages, API routes, UI components
+│   ├── prisma/                 # Schema, migrations, seed
+│   └── package.json
 ├── backend/
-│   ├── main.py               # FastAPI entry point & API routes
-│   ├── alpaca_service.py     # Alpaca API broker interaction layer
-│   ├── prediction_service.py # XGBoost model & DP algorithmic strategy
-│   └── risk_engine/          # Sentiment and Risk scoring modules
+│   ├── main.py                 # FastAPI routes: trade, prices, prediction, risk
+│   ├── alpaca_service.py       # Alpaca order + price service
+│   ├── prediction_service.py   # XGBoost forecast + strategy simulator
+│   ├── database.py             # SQLAlchemy DB initialization
+│   └── requirements.txt
 └── models/
-    ├── risk and reccomendation/ # Research scripts and integration handover guide
-    └── Sentiments/              # Jupyter notebooks containing model research (SentimentScore)
+  ├── SentimentScore2.ipynb
+  ├── Untitled5 (3).ipynb
+  ├── Sentiments/               # Sentiment experimentation scripts
+  └── risk and reccomendation/  # Risk engine research + integration handover
 ```
+
+### ✅ Attached Models Reviewed
+
+- `models/SentimentScore2.ipynb`
+- `models/Untitled5 (3).ipynb`
+- `models/Sentiments/main.py`
+- `models/risk and reccomendation/engine.py`
+- `models/risk and reccomendation/HANDOVER.md`
+
+These assets capture model experimentation and handover notes. Production runtime integration is handled through backend services and routes.
 
 ---
 
@@ -60,8 +81,28 @@ smart-trading-platform/
 
 ### 1. Environment Setup
 
-* **Frontend:** Create `frontend/.env` (or `.env.local`) based on the `.env.example` file to insert NextAuth, Database, and Razorpay keys.
-* **Backend:** Create `backend/.env` containing your `ALPACA_API_KEY`, `ALPACA_SECRET_KEY`, and `SENTIMENT_API_URL`.
+#### Frontend (`frontend/.env.local`)
+
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL` (recommended in production)
+- `FASTAPI_BASE_URL` (used by Next API proxy routes)
+- `NEXT_PUBLIC_API_URL` (used by client-side candlestick fetch)
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+
+Recommended production values:
+
+- `FASTAPI_BASE_URL=https://quantifyx-backend.onrender.com`
+- `NEXT_PUBLIC_API_URL=https://quantifyx-backend.onrender.com`
+
+#### Backend (`backend/.env`)
+
+- `ALPACA_API_KEY`
+- `ALPACA_SECRET_KEY`
+- `SENTIMENT_API_URL`
+- `DATABASE_URL` and/or `BACKEND_DATABASE_URL`
+- `CORS_ALLOW_ORIGINS` (optional, comma-separated)
 
 ### 2. Launch the Backend
 
@@ -70,7 +111,7 @@ The ML and Trading Engine require standard data science packages:
 ```bash
 cd backend
 pip install -r requirements.txt
-python -m uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 *(Optionally test the Swagger docs running at http://localhost:8000/docs)*
 
@@ -88,20 +129,33 @@ npx prisma migrate dev
 npm run dev
 ```
 
+You can also start both services from project root:
+
+```bash
+bash run_local.sh
+```
+
 ---
 
 ## 📡 Core API Capabilities
 
 ### Standard Trading Endpoints (`backend/main.py`)
 - `POST /api/trade`: Validate user balance & submit a live Alpaca market order. On fill, updates SQLite local ledger.
-- `GET /api/prices/{ticker}/ohlc`: Fetches cached 6-month historical data formatting for frontend charting.
+- `GET /api/prices/{ticker:path}/ohlc`: Fetches cached 6-month historical data formatting for frontend charting.
+- `GET /health`: Backend health probe.
 
 ### ML & Prediction Endpoints (`prediction_service.py`)
 - `POST /api/predictions`: Accepts a ticker and user constraints (`budget`, `max_transactions`, `cooldown`), runs features through XGBoost, evaluates DP strategy, and returns optimized future trade logs mapping expected 15-day PnL.
 
 ### Risk Engine Endpoints (`risk_engine/engine.py`)
+- `GET /risk/inputs/sentiment/{symbol}`
+- `GET /risk/inputs/sentiment-all`
+- `GET /risk/inputs/prediction/{symbol}`
+- `GET /risk/inputs/prediction-all`
 - `GET /risk/company/{symbol}`: Returns synthesized JSON with `risk_score`, final rating (e.g. 🟢 STRONG BUY), and exact strategy description combining ML `net_pnl_percent` with news sentiment.
+- `GET /risk/all`
 - `GET /risk/top3`: Extracts the 3 optimal portfolio allocations based on combined algorithmic ranking.
+- `GET /risk/reset`
 
 ---
 
