@@ -22,7 +22,7 @@ A high-performance comprehensive Next.js + TypeScript trading simulator built fo
 - **15-Day Price Forecasting:** An **XGBoost Regressor** trained on engineered technical indicators (RSI, MACD, Bollinger Bands via `pandas-ta`) accurately predicts future closing prices.
 - **Algorithmic DP Strategy:** A Dynamic Programming trading simulation executes on top of the forecasted prices to optimize optimal entry (BUY/SELL) actions under constraints (budget, max transactions, cooldown periods).
 - **Sentiment & Risk Engine:** A modular service (`risk_engine`) calculating holistic `risk_score`, `signal_score`, and `final_strength` based on algorithmic trade profit projection and live News Sentiment endpoints. Yields clear buy/hold/sell recommendations and capital allocation percentages.
-
+  - **Deployed Sentiment Model API:** [https://sentiment-api-6qy2.onrender.com/sentiment-multiple](https://sentiment-api-6qy2.onrender.com/sentiment-multiple)
 ---
 
 ## 🏗️ Technology Stack
