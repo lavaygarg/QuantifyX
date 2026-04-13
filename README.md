@@ -17,6 +17,9 @@ QuantifyX is a full-stack trading and portfolio platform that combines a modern 
 - **Authentication:** Credential login with NextAuth + Prisma adapter.
 - **Wallet Flow:** Razorpay order + signature verification API routes.
 - **Modern UI:** Tailwind CSS + Lucide icons with responsive dashboard patterns.
+- **User Portfolio Operations:** Add/remove watchlist symbols, review holdings, and inspect transaction history in a single unified dashboard.
+- **Server API Proxy Layer:** Next.js API routes proxy backend operations (`/api/trade`, `/api/predictions`, `/api/risk/*`) for cleaner frontend integration.
+- **Production-grade UX:** Loading states, error states, and modular panels for trading and model outputs.
 
 ### ⚙️ FastAPI Trading Engine
 - **Trade Execution:** Alpaca paper-trade order flow with validation and ledger updates.
@@ -29,6 +32,34 @@ QuantifyX is a full-stack trading and portfolio platform that combines a modern 
 - **Strategy Simulation:** Rule-based trading strategy to generate actionable 15-day decisions.
 - **Risk + Sentiment Fusion:** Produces `risk_score`, `signal_score`, `final_strength`, recommendation label, and strategy text.
   - **Deployed Sentiment Model API:** [https://sentiment-api-6qy2.onrender.com/sentiment-multiple](https://sentiment-api-6qy2.onrender.com/sentiment-multiple)
+
+### 🧪 ML Models: Detailed Breakdown
+
+- **Forecasting Model (`backend/prediction_service.py`):**
+  - Model: `XGBRegressor`
+  - Forecast horizon: **15 business days**
+  - Universe support (current): `AAPL`, `TSLA`, `AMZN`, `MSFT`, `GOOGL`, `NVDA`, `META`
+  - Data source: `yfinance` historical daily candles
+- **Feature Engineering Pipeline:**
+  - Momentum/lag features: return lags and momentum ratios
+  - Technical indicators: RSI, MACD, Bollinger Bands (`pandas-ta`)
+  - Rolling statistics: moving mean ratios + return volatility windows
+- **Trade Simulation Logic:**
+  - Simulates BUY/SELL/HOLD actions over predicted price series
+  - Constraints: budget, max transactions, cooldown, fee per trade
+  - Returns table-level outputs: `predicted_price`, `action`, `shares_held`, `cash_balance`, `total_equity`
+- **Risk & Recommendation Engine:**
+  - Combines forecast-derived profitability with sentiment score
+  - Produces machine-readable recommendation payloads for single company and top-3 allocation outputs
+
+### 🌍 Website Feature Walkthrough
+
+- **Trading Tab:** Candlestick chart + trade ticket for quick market action.
+- **Holdings Tab:** Portfolio positions with quantity, average cost, and current value tracking.
+- **Watchlist Tab:** Symbol management and trend visualization.
+- **Transactions Tab:** Chronological order history for auditability.
+- **ML Prediction Tab:** Runs forecasting model and shows profit curves + 15-day action table.
+- **Risk & Sentiment Tab:** Returns recommendation strength, strategy explanation, and risk insights.
 ---
 
 ## 🏗️ Technology Stack
