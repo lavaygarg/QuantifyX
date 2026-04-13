@@ -9,16 +9,19 @@ import { TradeTicket } from '@/components/trade-ticket';
 import { TransactionsPanel } from '@/components/transactions-panel';
 import { WatchlistPanel } from '@/components/watchlist-panel';
 import { CandlestickChart } from '@/components/candlestick-chart';
+import { RiskPanel } from '@/components/risk-panel';
 import type { Holding, Transaction, WatchlistItem } from '@/lib/types';
+import { ShieldAlert } from 'lucide-react';
 
-type DashboardTab = 'trading' | 'holdings' | 'watchlist' | 'transactions' | 'ml';
+type DashboardTab = 'trading' | 'holdings' | 'watchlist' | 'transactions' | 'ml' | 'risk';
 
 const tabs: Array<{ key: DashboardTab; label: string; description: string; icon: React.ReactNode }> = [
   { key: 'trading', label: 'Trading', description: 'Chart + trade ticket', icon: <CandlestickChartIcon className="h-4 w-4" /> },
   { key: 'holdings', label: 'Holdings', description: 'Positions and P&L', icon: <BarChart3 className="h-4 w-4" /> },
   { key: 'watchlist', label: 'Watchlist', description: 'Tracked symbols', icon: <ListChecks className="h-4 w-4" /> },
   { key: 'transactions', label: 'Recent Transactions', description: 'Trade history', icon: <History className="h-4 w-4" /> },
-  { key: 'ml', label: 'ML Prediction', description: 'Forecasts and risk', icon: <BrainCircuit className="h-4 w-4" /> }
+  { key: 'ml', label: 'ML Prediction', description: 'Forecasts and risk', icon: <BrainCircuit className="h-4 w-4" /> },
+  { key: 'risk', label: 'Risk & Sentiment', description: 'Real-time analysis', icon: <ShieldAlert className="h-4 w-4" /> }
 ];
 
 export function DashboardTabs({
@@ -87,6 +90,8 @@ export function DashboardTabs({
         {activeTab === 'transactions' && <TransactionsPanel transactions={transactions} />}
 
         {activeTab === 'ml' && <PredictionPanel />}
+
+        {activeTab === 'risk' && <RiskPanel />}
       </div>
     </div>
   );

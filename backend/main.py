@@ -25,7 +25,14 @@ from models import Holding, Portfolio, Transaction, User
 from prediction_service import PredictionRequest as ServicePredictionRequest
 from prediction_service import PredictionServiceError, generate_prediction
 from schemas import PredictionRequest, TradeRequest, TradeResponse
-
+from risk_engine.engine import (
+    get_sentiment_input,
+    get_prediction_input,
+    get_company_output,
+    run_engine_all,
+    get_top3,
+    reset_cache,
+)
 fastapi_module = import_module('fastapi')
 cors_module = import_module('fastapi.middleware.cors')
 
@@ -247,3 +254,48 @@ def trade(payload: TradeRequest) -> TradeResponse:
     finally:
         validation_session.close()
         ledger_session.close()
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  RISK ENGINE — SENTIMENT INPUTS  (6 buttons)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/risk/inputs/sentiment/{symbol}")
+def risk_sentiment_single(symbol: str):
+    return get_sentiment_input(symbol.upper())
+
+@app.get("/risk/inputs/sentiment-all")
+def risk_sentiment_all():
+    return get_sentiment_input()
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  RISK ENGINE — PREDICTION INPUTS  (6 buttons)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/risk/inputs/prediction/{symbol}")
+def risk_prediction_single(symbol: str):
+    return get_prediction_input(symbol.upper())
+
+@app.get("/risk/inputs/prediction-all")
+def risk_prediction_all():
+    return get_prediction_input()
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  RISK ENGINE — COMPUTED OUTPUTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/risk/company/{symbol}")
+def risk_company(symbol: str):
+    return get_company_output(symbol.upper())
+
+@app.get("/risk/all")
+def risk_all():
+    return run_engine_all()
+
+@app.get("/risk/top3")
+def risk_top3():
+    return get_top3()
+
+@app.get("/risk/reset")
+def risk_reset():
+    reset_cache()
+    return {"message": "Risk engine cache cleared ✅"}
